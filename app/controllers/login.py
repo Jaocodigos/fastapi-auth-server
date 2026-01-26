@@ -7,7 +7,7 @@ from typing import Annotated
 
 from app.db.session import get_db
 from app.models.user import User
-from app.core.security import verify_password
+from app.services.security.crypt import verify_hash
 from app.schemas.login import Login
 
 router = APIRouter(tags=["Login"])
@@ -30,7 +30,7 @@ def login_submit(
 ):
     user = db.execute(select(User).filter_by(username=form.username)).scalar_one_or_none()
 
-    if not user or not verify_password(form.password, user.password_hash):
+    if not user or not verify_hash(form.password, user.password_hash):
 
         return templates.TemplateResponse(
             "login.html",

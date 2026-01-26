@@ -4,7 +4,7 @@ from sqlalchemy.sql import select
 from app.models.user import User
 from app.schemas.users import UserCreate, UserResponse
 from app.schemas.default import DeletedResponse
-from app.core.security import hash_password
+from app.services.security.crypt import hash_content
 from app.handlers.errors.user import UserNotFound, UserAlreadyExists
 
 
@@ -28,11 +28,11 @@ def create_user(db: Session, data: UserCreate):
     ).scalar_one_or_none()
 
     if exists:
-        raise UserAlreadyExists()
+        raise UserAlreadyExists(data.username)
 
     user = User(
         username=data.username,
-        password_hash=hash_password(data.password),
+        password_hash=hash_content(data.password),
     )
 
     db.add(user)

@@ -3,11 +3,12 @@ from datetime import datetime, timedelta
 from jose import jwt
 
 from app.core.config import settings
+from app.services.security.crypt import PRIVATE_KEY
 
-def create_access_token(subject: str, scopes: list[str], audience: str) -> str:
+def create_access_token(subject: str, scopes: list[str], audience: str, client_exp: int) -> tuple[str, float]:
 
     expire = datetime.utcnow() + timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        minutes=client_exp
     )
 
     payload = {
@@ -20,7 +21,11 @@ def create_access_token(subject: str, scopes: list[str], audience: str) -> str:
 
     return jwt.encode(
         payload,
-        settings.JWT_SECRET_KEY,
+        PRIVATE_KEY,
         algorithm=settings.JWT_ALGORITHM,
-    )
+    ), expire.timestamp()
 
+
+def validate_token(token: str) -> bool:
+    # TODO: VALIDATE CLIENT_SECRET
+    ...

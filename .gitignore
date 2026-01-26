@@ -208,3 +208,7 @@ __marimo__/
 
 # Database
 *.db
+
+# Keys
+
+*.pem

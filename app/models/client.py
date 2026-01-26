@@ -1,15 +1,46 @@
-from sqlalchemy import String, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import List
+
+from sqlalchemy import String, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.session import Base
+from app.services.security.crypt import generate_secret, hash_content
 
 class OAuthClient(Base):
-    __tablename__ = "oauth_clients"
+    __tablename__ = "clients"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     client_id: Mapped[str] = mapped_column(String(100), unique=True, index=True)
 
+    client_secret: Mapped[str] = mapped_column(String(100), unique=True, nullable=True) # May depend on client_type
+
     redirect_uri: Mapped[str] = mapped_column(String(500))
 
-    is_public: Mapped[bool] = mapped_column(Boolean, default=True)
+    client_type: Mapped[str] = mapped_column(String(20)) # Public or Confidential
 
-    allowed_scopes: Mapped[str] = mapped_column(String(500))
+    response_type: Mapped[str] = mapped_column(String(100))
+
+    token_exp: Mapped[int] = mapped_column(Integer) # Seconds
+
+    scopes: Mapped[list["Scopes"]] = relationship(
+        secondary="client_scopes",
+        back_populates="clients"
+    )
+
+    grant_types: Mapped[list["GrantType"]] = relationship(
+        secondary="client_grant_types",
+        lazy="selectin"
+    )
+
+    @property
+    def allowed_scopes(self) -> List[str]:
+        return [x.scope_name for x in self.scopes]
+
+    def generate_secret(self) -> str:
+
+        client_secret = generate_secret(32)
+        hash_secret = hash_content(client_secret)
+        self.client_secret = hash_secret
+
+        return hash_secret
+
+

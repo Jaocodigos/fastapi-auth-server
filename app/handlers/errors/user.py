@@ -1,6 +1,11 @@
+from app.handlers.errors.default import NotFoundError, AlreadyExistsError
 
-class UserNotFound(Exception):
-    pass
 
-class UserAlreadyExists(Exception):
-    pass
+class UserNotFound(NotFoundError):
+
+    message = "User not found."
+
+class UserAlreadyExists(AlreadyExistsError):
+
+    def __init__(self, user=None):
+        self.message = f"User '{user}' already exists."

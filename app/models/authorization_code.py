@@ -11,7 +11,7 @@ class AuthorizationCode(Base):
     code: Mapped[str] = mapped_column(String(200), unique=True, index=True)
 
     client_id: Mapped[str] = mapped_column(
-        String(100), ForeignKey("oauth_clients.client_id")
+        String(100), ForeignKey("clients.client_id")
     )
 
     user_id: Mapped[int] = mapped_column(

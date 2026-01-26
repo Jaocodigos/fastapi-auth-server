@@ -1,21 +1,33 @@
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.controllers.authorize import router as authorize_router
-from app.controllers.token import router as token_router
-from app.controllers.client import router as client_router
-from app.controllers.login import router as login_router
-from app.controllers.user import router as user_router
-
 from app.db.session import engine, Base
+from app.db.app_start import seed_database
 from app.core.config import validate_settings
+from app.core.routing import register_controllers
+from app.handlers.handler import register_error_handlers
+from app.core.scripts.generate_keys import ensure_keys_exist
+
 
 def create_app():
 
-    app = FastAPI()
+    app = FastAPI(
+        title="Authorization Server",
+        description="Authorization Server with both Oauth 2.0 and OpenID Connect layers.",
+        version="1.0",
+        contact={
+            "name": "João Rodrigues",
+            "github": "https://github.com/Jaocodigos"
+        }
+    )
 
+    # Custom Errors
+    register_error_handlers(app)
+
+    # Import Settings
     settings = validate_settings()
 
+    # Session middleware
     app.add_middleware(
         SessionMiddleware,
         secret_key=settings.SECRET_KEY,
@@ -24,17 +36,18 @@ def create_app():
         https_only=True if settings.APP_ENV == "prod" else False,  # True on production
     )
 
-    # Routes
-    app.include_router(authorize_router)
-    app.include_router(token_router)
-    app.include_router(client_router)
-    app.include_router(login_router)
-    app.include_router(user_router)
+    # Registering routes
+    register_controllers(app, "app.controllers")
 
+    # TODO: Use a relational database like MySQL or Postgres
+    # Creating database(sqlite only)
     @app.on_event("startup")
     def startup():
-        from app.models import User, Token, AuthorizationCode, OAuthClient
+
+        from app.models import User, Token, AuthorizationCode, OAuthClient, ClientScope, ScopesAndClaims, Claims, Scopes
         Base.metadata.create_all(bind=engine)
+        seed_database()
+        ensure_keys_exist()
 
 
     return app

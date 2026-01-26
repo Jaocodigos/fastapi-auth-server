@@ -13,3 +13,6 @@ class Token(Base):
 
     scopes: Mapped[str]
     expires_at: Mapped[datetime]
+
+    def expired(self) -> bool:
+        return self.expires_at < datetime.now()

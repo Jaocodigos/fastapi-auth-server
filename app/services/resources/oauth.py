@@ -1,4 +1,3 @@
-import secrets
 import hashlib
 import base64
 
@@ -10,7 +9,8 @@ from app.models.authorization_code import AuthorizationCode
 from app.models.client import OAuthClient
 from app.schemas.authorize import AuthorizeParams, CodeResponse
 from app.schemas.token import TokenExchange
-from app.handlers.errors.oauth import OAuthError
+from app.handlers.errors.default import OauthError
+from app.services.security.crypt import generate_secret
 
 
 def verify_pkce(code_verifier: str, code_challenge: str) -> bool:
@@ -27,21 +27,23 @@ def generate_code(user_id: str, data: AuthorizeParams, db: Session) -> str:
     client = db.execute(select(OAuthClient).filter_by(client_id=data.client_id)).scalar_one_or_none()
 
     if not client:
-        raise OAuthError("invalid_client")
+        raise OauthError("invalid_client")
 
     # 2. redirect_uri
     if data.redirect_uri != client.redirect_uri:
-        raise OAuthError("invalid_redirect_uri")
+        raise OauthError("invalid_redirect_uri")
 
     # 3. scopes
     requested_scopes = set(data.scope.split()) if data.scope else set()
-    allowed_scopes = set(client.allowed_scopes.split())
+    allowed_scopes = set(client.allowed_scopes)
 
     if not requested_scopes.issubset(allowed_scopes):
-        raise OAuthError("invalid_scope")
+        raise OauthError("invalid_scope")
+
+    # TODO: ALSO VALIDATE -> response type, client type
 
     # 4. Generate code
-    code = secrets.token_urlsafe(32)
+    code = generate_secret(32)
 
     auth_code = AuthorizationCode(
         code=code,
@@ -62,32 +64,32 @@ def validate_code(db: Session, data: TokenExchange) -> CodeResponse:
 
     # 1. grant_type
     if data.grant_type != "authorization_code":
-        raise OAuthError("unsupported_grant_type")
+        raise OauthError("unsupported_grant_type")
 
     # 2. client
     client = db.execute(select(OAuthClient).filter_by(client_id=data.client_id)).scalar_one_or_none()
     if not client:
-        raise OAuthError("invalid_client", code=401)
+        raise OauthError("invalid_client", status_code=401)
 
     if data.redirect_uri != client.redirect_uri:
-        raise OAuthError("invalid_redirect_uri")
+        raise OauthError("invalid_redirect_uri")
 
     # 3. authorization code
     auth_code = db.execute(select(AuthorizationCode).filter_by(code=data.code, client_id=data.client_id)).scalar_one_or_none()
 
     if not auth_code:
-        raise OAuthError("invalid_code")
+        raise OauthError("invalid_code")
 
     # 4. validações do code
     if auth_code.used:
-        raise OAuthError("invalid_code")
+        raise OauthError("invalid_code")
 
     if auth_code.is_expired():
-        raise OAuthError("expired_code")
+        raise OauthError("expired_code")
 
     # 5. PKCE
     if not verify_pkce(data.code_verifier, auth_code.code_challenge):
-        raise OAuthError("invalid_grant")
+        raise OauthError("invalid_grant")
 
     # 6. invalidar code
     auth_code.use_code()
@@ -95,4 +97,5 @@ def validate_code(db: Session, data: TokenExchange) -> CodeResponse:
 
     return CodeResponse(user_id=str(auth_code.user_id),
                         redirect_uri=client.redirect_uri,
-                        allowed_scopes=client.allowed_scopes.split(" "))
+                        allowed_scopes=client.allowed_scopes,
+                        client_exp=client.token_exp)

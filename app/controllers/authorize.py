@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request, HTTPException
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from typing import Annotated
@@ -6,8 +6,7 @@ from typing import Annotated
 
 from app.db.session import get_db
 from app.schemas.authorize import AuthorizeParams
-from app.services.oauth import generate_code
-from app.handlers.errors.oauth import OAuthError
+from services.resources.oauth import generate_code
 
 router = APIRouter(prefix="/api", tags=["Oauth 2.0"])
 
@@ -27,10 +26,7 @@ def authorize(
         request.session["next_url"] = str(request.url)
         return RedirectResponse("/login", status_code=302)
 
-    try:
-        code = generate_code(user_id=user_id, data=params, db=db)
-    except OAuthError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    code = generate_code(user_id=user_id, data=params, db=db)
 
     redirect_url = f"{params.redirect_uri}?code={code}"
     if params.state:

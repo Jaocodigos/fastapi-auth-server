@@ -25,6 +25,7 @@ class CodeResponse(BaseModel):
     user_id: str
     redirect_uri: str
     allowed_scopes: List[str]
+    client_exp: int
 
     class Config:
         from_attributes = True

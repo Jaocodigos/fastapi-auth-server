@@ -7,9 +7,9 @@ class Settings(BaseModel):
     SECRET_KEY: str = getenv("SECRET_KEY")
     APP_ENV: str = getenv("APP_ENV")
     ISSUER: str = getenv("ISSUER")
-    JWT_SECRET_KEY: str = getenv("JWT_SECRET_KEY")
-    JWT_ALGORITHM: str = "HS256" # For now
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    JWT_ALGORITHM: str = "RS256" # For now
+    PRIVATE_KEY_PATH: str = getenv("PRIVATE_KEY_PATH", "private.pem")
+    PUBLIC_KEY_PATH: str = getenv("PUBLIC_KEY_PATH", "public.pem")
 
 
 settings = Settings()

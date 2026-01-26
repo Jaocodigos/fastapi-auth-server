@@ -1,13 +1,12 @@
+from app.handlers.errors.default import NotFoundError, ClientError
 
-class ClientNotFound(Exception):
+
+class ClientNotFound(NotFoundError):
+
+    message = "Client not found."
+
+class InvalidClient(ClientError):
 
     def __init__(self):
-        self.error = "Client not found"
-        self.status_code = 404
-
-
-class InvalidClient(Exception):
-
-    def __init__(self):
-        self.error = "Client not found"
+        self.message = "Invalid client"
         self.status_code = 401
