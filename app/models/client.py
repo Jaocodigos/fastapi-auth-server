@@ -43,4 +43,18 @@ class OAuthClient(Base):
 
         return hash_secret
 
+    def validate_secret(self, secret: str) -> bool:
+        return secret == self.client_secret
+
+    def is_confidential(self) -> bool:
+        return self.client_type == "confidential"
+
+    def validate_grant_type(self, grant_type: str) -> bool:
+        return any(x.name == grant_type for x in self.grant_types)
+
+    def validate_response_type(self, response_type: str) -> bool:
+        return response_type == self.response_type
+
+    def validate_redirect_uri(self, redirect_uri: str) -> bool:
+        return redirect_uri == self.redirect_uri
 

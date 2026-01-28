@@ -34,3 +34,7 @@ class ClientResponse(BaseModel):
     client_type: str
 
 
+class BaseClient(BaseModel):
+    client_id: Optional[str] = None
+    client_secret: Optional[str] = None
+

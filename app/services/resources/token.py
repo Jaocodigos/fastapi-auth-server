@@ -1,11 +1,12 @@
 
 from datetime import datetime, timedelta
 from jose import jwt
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.services.security.crypt import PRIVATE_KEY
 
-def create_access_token(subject: str, scopes: list[str], audience: str, client_exp: int) -> tuple[str, float]:
+def issue_token(subject: str, scopes: list[str], audience: str, client_exp: int) -> tuple[str, float]:
 
     expire = datetime.utcnow() + timedelta(
         minutes=client_exp
@@ -26,6 +27,6 @@ def create_access_token(subject: str, scopes: list[str], audience: str, client_e
     ), expire.timestamp()
 
 
-def validate_token(token: str) -> bool:
+def validate_refresh_token(token: str, db: Session) -> bool:
     # TODO: VALIDATE CLIENT_SECRET
     ...

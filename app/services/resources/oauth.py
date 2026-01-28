@@ -4,14 +4,21 @@ import base64
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import select
 from datetime import datetime, timedelta
+from typing import Annotated
+from fastapi import Depends, Body
+from fastapi.security import HTTPBasic
 
 from app.models.authorization_code import AuthorizationCode
 from app.models.client import OAuthClient
-from app.schemas.authorize import AuthorizeParams, CodeResponse
+from app.schemas.authorize import AuthorizeParams
 from app.schemas.token import TokenExchange
+from app.schemas.clients import BaseClient
 from app.handlers.errors.default import OauthError
 from app.services.security.crypt import generate_secret
+from app.services.security.auth import decode_basic_auth
+from app.db.session import get_db
 
+security = HTTPBasic()
 
 def verify_pkce(code_verifier: str, code_challenge: str) -> bool:
 
@@ -60,42 +67,50 @@ def generate_code(user_id: str, data: AuthorizeParams, db: Session) -> str:
 
     return code
 
-def validate_code(db: Session, data: TokenExchange) -> CodeResponse:
 
-    # 1. grant_type
-    if data.grant_type != "authorization_code":
-        raise OauthError("unsupported_grant_type")
+# Must support basic and post authentications
+def validate_client(data: Annotated[TokenExchange, Body],
+                    credentials: BaseClient = Depends(decode_basic_auth),
+                    db: Session = Depends(get_db)) -> OAuthClient:
 
-    # 2. client
-    client = db.execute(select(OAuthClient).filter_by(client_id=data.client_id)).scalar_one_or_none()
+    # confidential client
+    if credentials.client_id:
+        client = db.execute(select(OAuthClient).filter_by(client_id=credentials.client_id)).scalar_one_or_none()
+    else:
+        client = db.execute(select(OAuthClient).filter_by(client_id=data.client_id)).scalar_one_or_none()
+
     if not client:
         raise OauthError("invalid_client", status_code=401)
 
-    if data.redirect_uri != client.redirect_uri:
+    if client.is_confidential() and not (credentials.client_secret and client.validate_secret(credentials.client_secret)):
+        raise OauthError("invalid_client", status_code=401)
+
+    if not client.validate_redirect_uri(data.redirect_uri):
         raise OauthError("invalid_redirect_uri")
 
-    # 3. authorization code
+    if not client.validate_grant_type(data.grant_type):
+        raise OauthError("unsupported_grant_type")
+
+    return client
+
+
+def validate_code(data: TokenExchange, db: Session) -> str:
+
     auth_code = db.execute(select(AuthorizationCode).filter_by(code=data.code, client_id=data.client_id)).scalar_one_or_none()
 
     if not auth_code:
         raise OauthError("invalid_code")
 
-    # 4. validações do code
     if auth_code.used:
         raise OauthError("invalid_code")
 
     if auth_code.is_expired():
         raise OauthError("expired_code")
 
-    # 5. PKCE
     if not verify_pkce(data.code_verifier, auth_code.code_challenge):
         raise OauthError("invalid_grant")
 
-    # 6. invalidar code
     auth_code.use_code()
     db.commit()
 
-    return CodeResponse(user_id=str(auth_code.user_id),
-                        redirect_uri=client.redirect_uri,
-                        allowed_scopes=client.allowed_scopes,
-                        client_exp=client.token_exp)
+    return str(auth_code.user_id)
