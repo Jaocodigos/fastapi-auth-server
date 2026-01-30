@@ -44,7 +44,7 @@ def create_app():
     @app.on_event("startup")
     def startup():
 
-        from app.models import User, Token, AuthorizationCode, OAuthClient, ClientScope, ScopesAndClaims, Claims, Scopes
+        from app.models import User, AuthorizationCode, OAuthClient, ClientScope, ScopesAndClaims, Claims, Scopes, RefreshToken, GrantType
         Base.metadata.create_all(bind=engine)
         seed_database()
         ensure_keys_exist()

@@ -39,6 +39,8 @@ def create_client(db: Session, data: ClientCreate):
         response_type=data.response_type,
         client_type=data.client_type,
         token_exp=data.token_exp,
+        refresh_token_exp=data.refresh_token_exp,
+        code_exp=data.code_exp
     )
 
     for x in data.grant_types:
@@ -70,6 +72,8 @@ def create_client(db: Session, data: ClientCreate):
         redirect_uri=client.redirect_uri,
         scopes=client.allowed_scopes,
         token_exp=client.token_exp,
+        refresh_token_exp=client.token_exp,
+        code_exp=client.token_exp,
         client_type=client.client_type,
         response_type=client.response_type
     )

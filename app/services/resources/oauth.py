@@ -58,7 +58,7 @@ def generate_code(user_id: str, data: AuthorizeParams, db: Session) -> str:
         user_id=user_id,
         code_challenge=data.code_challenge,
         code_challenge_method=data.code_challenge_method,
-        expires_at=datetime.utcnow() + timedelta(minutes=5),
+        expires_at=datetime.utcnow() + timedelta(minutes=client.code_exp),
         used=False,
     )
 
@@ -94,7 +94,7 @@ def validate_client(data: Annotated[TokenExchange, Body],
     return client
 
 
-def validate_code(data: TokenExchange, db: Session) -> str:
+def validate_code_and_return_user(data: TokenExchange, db: Session) -> int:
 
     auth_code = db.execute(select(AuthorizationCode).filter_by(code=data.code, client_id=data.client_id)).scalar_one_or_none()
 
@@ -113,4 +113,4 @@ def validate_code(data: TokenExchange, db: Session) -> str:
     auth_code.use_code()
     db.commit()
 
-    return str(auth_code.user_id)
+    return auth_code.user_id

@@ -8,6 +8,8 @@ class ClientCreate(BaseModel):
     scopes: List[str]
     response_type: str
     token_exp: int
+    refresh_token_exp: int
+    code_exp: int
 
     @model_validator(mode="after")
     def validate_scope(self) -> Self:
@@ -18,9 +20,14 @@ class ClientCreate(BaseModel):
         if self.response_type not in ["code", "id_token", "token"]:
             raise ValueError("invalid response_type")
 
-        if self.token_exp < 0:
+        if self.token_exp <= 0:
             raise ValueError("invalid token_exp")
 
+        if self.code_exp <= 0:
+            raise ValueError("invalid code_exp")
+
+        if self.refresh_token_exp <= 0 or self.refresh_token_exp <= self.token_exp:
+            raise ValueError("invalid refresh_token_exp")
 
         return self
 
@@ -31,6 +38,8 @@ class ClientResponse(BaseModel):
     scopes: List[str]
     response_type: str
     token_exp: int
+    refresh_token_exp: int
+    code_exp: int
     client_type: str
 
 

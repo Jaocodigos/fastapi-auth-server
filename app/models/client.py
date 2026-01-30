@@ -19,7 +19,10 @@ class OAuthClient(Base):
 
     response_type: Mapped[str] = mapped_column(String(100))
 
-    token_exp: Mapped[int] = mapped_column(Integer) # Seconds
+    # All in minutes
+    token_exp: Mapped[int] = mapped_column(Integer)
+    refresh_token_exp: Mapped[int] = mapped_column(Integer, default=30)
+    code_exp: Mapped[int] = mapped_column(Integer)
 
     scopes: Mapped[list["Scopes"]] = relationship(
         secondary="client_scopes",
