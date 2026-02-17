@@ -42,7 +42,7 @@ def create_user(db: Session, data: UserCreate):
     return user
 
 
-def erase_user(db: Session, user_id: int):
+def erase_user(db: Session, user_id: str):
 
     user = db.execute(
         select(User).where(User.id == user_id)

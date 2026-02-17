@@ -40,7 +40,7 @@ def create_claim(db: Session, data: ClaimCreate):
     return claim
 
 
-def delete_claim(db: Session, claim_id: int):
+def delete_claim(db: Session, claim_id: str):
 
     claim = db.execute(
         select(Claims).where(Claims.id == claim_id)

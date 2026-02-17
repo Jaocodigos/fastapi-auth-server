@@ -7,7 +7,7 @@ class ScopeCreate(BaseModel):
     claims: Optional[List[str]] = None
 
 class ScopeResponse(BaseModel):
-    id: int
+    id: str
     name: str
     claims: Optional[List[str]] = None
 

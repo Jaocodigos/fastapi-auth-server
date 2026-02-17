@@ -43,7 +43,7 @@ def create_scope(db: Session, data: ScopeCreate):
     return ScopeResponse(id=scope.id, name=scope.scope_name, claims=scope.claims)
 
 
-def delete_scope(db: Session, scope_id: int):
+def delete_scope(db: Session, scope_id: str):
 
     scope = db.execute(
         select(Scopes).where(Scopes.id == scope_id)

@@ -1,13 +1,22 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal, Union
 
-class TokenExchange(BaseModel):
-    grant_type: str
+class AuthorizationCodeGrant(BaseModel):
+
+    grant_type: Literal["authorization_code"]
     code: str
     client_id: str
     redirect_uri: str
     code_verifier: str
-    refresh_token: Optional[str] = None
+
+class RefreshTokenGrant(BaseModel):
+
+    grant_type: Literal["refresh_token"]
+    refresh_token: str
+    client_id: str
+
+
+TokenExchange = Union[AuthorizationCodeGrant, RefreshTokenGrant]
 
 class TokenResponse(BaseModel):
     access_token: str

@@ -3,12 +3,12 @@ from sqlalchemy import String, Boolean
 from sqlalchemy import UniqueConstraint
 
 from app.db.session import Base
+from app.models.default import Default
 
 
-class GrantType(Base):
+class GrantType(Default, Base):
     __tablename__ = "grant_types"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(
         String(50),
         nullable=False,

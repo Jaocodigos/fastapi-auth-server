@@ -4,11 +4,11 @@ from sqlalchemy import String, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.session import Base
 from app.services.security.crypt import generate_secret, hash_content
+from app.models.default import Default
 
-class OAuthClient(Base):
+class OAuthClient(Default, Base):
     __tablename__ = "clients"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     client_id: Mapped[str] = mapped_column(String(100), unique=True, index=True)
 
     client_secret: Mapped[str] = mapped_column(String(100), unique=True, nullable=True) # May depend on client_type

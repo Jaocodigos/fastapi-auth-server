@@ -5,5 +5,5 @@ class ClaimCreate(BaseModel):
     name: str
 
 class ClaimResponse(BaseModel):
-    id: int
+    id: str
     name: str

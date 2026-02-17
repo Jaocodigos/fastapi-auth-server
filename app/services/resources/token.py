@@ -1,6 +1,6 @@
 
 from sqlalchemy.sql import select
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from jose import jwt
 from sqlalchemy.orm import Session
 
@@ -12,7 +12,7 @@ from app.handlers.errors.default import OauthError
 
 def issue_token(subject: str, scopes: list[str], audience: str, client_exp: int, refresh_token=None) -> TokenResponse:
 
-    issued_at = datetime.utcnow()
+    issued_at = datetime.now(UTC)
     expire = issued_at + timedelta(
         minutes=client_exp
     )
@@ -39,9 +39,9 @@ def issue_token(subject: str, scopes: list[str], audience: str, client_exp: int,
         refresh_token=refresh_token
     )
 
-def issue_refresh_token(db: Session, user_id: int, client_id: str, refresh_token_exp: int) -> tuple[str, int]:
+def issue_refresh_token(db: Session, user_id: str, client_id: str, refresh_token_exp: int) -> tuple[str, str]:
 
-    issued_at = datetime.utcnow()
+    issued_at = datetime.now(UTC)
     expire = issued_at + timedelta(
         minutes=refresh_token_exp
     )
@@ -59,13 +59,15 @@ def issue_refresh_token(db: Session, user_id: int, client_id: str, refresh_token
     db.add(refresh_token)
     db.commit()
 
+    token = f"{refresh_token.id}.{token}"
+
     return token, refresh_token.id
 
-def validate_and_issue_refresh_token(db: Session, refresh_token: str, refresh_token_exp: int) -> tuple[str, int]:
+def validate_and_issue_refresh_token(db: Session, refresh_token: str, refresh_token_exp: int) -> tuple[str, str]:
 
-    token_hash = hash_content(refresh_token)
+    refresh_token_id = refresh_token.split(".")[0]
 
-    refresh_token = db.execute(select(RefreshToken).filter_by(token_hash=token_hash)).scalar_one_or_none()
+    refresh_token = db.execute(select(RefreshToken).filter_by(id=refresh_token_id)).scalar_one_or_none()
 
     if not refresh_token:
         raise OauthError("invalid_grant")

@@ -73,6 +73,7 @@ def validate_client(data: Annotated[TokenExchange, Body],
                     credentials: BaseClient = Depends(decode_basic_auth),
                     db: Session = Depends(get_db)) -> OAuthClient:
 
+
     # confidential client
     if credentials.client_id:
         client = db.execute(select(OAuthClient).filter_by(client_id=credentials.client_id)).scalar_one_or_none()
@@ -82,14 +83,16 @@ def validate_client(data: Annotated[TokenExchange, Body],
     if not client:
         raise OauthError("invalid_client", status_code=401)
 
-    if client.is_confidential() and not (credentials.client_secret and client.validate_secret(credentials.client_secret)):
-        raise OauthError("invalid_client", status_code=401)
-
-    if not client.validate_redirect_uri(data.redirect_uri):
-        raise OauthError("invalid_redirect_uri")
-
     if not client.validate_grant_type(data.grant_type):
         raise OauthError("unsupported_grant_type")
+
+    if data.grant_type != "refresh_token":
+
+        if client.is_confidential() and not (credentials.client_secret and client.validate_secret(credentials.client_secret)):
+            raise OauthError("invalid_client", status_code=401)
+
+        if not client.validate_redirect_uri(data.redirect_uri):
+            raise OauthError("invalid_redirect_uri")
 
     return client
 

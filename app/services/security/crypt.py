@@ -4,6 +4,7 @@ import base64
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from passlib.context import CryptContext
+import bcrypt
 
 from app.schemas.jwks import JWKResponse
 from app.core.config import settings
