@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import select
 
-from models import Scopes
-from schemas.scopes import ScopeResponse, ScopeCreate
-from schemas.default import DeletedResponse
-from handlers.errors.scopes import ScopeNotFound, ScopeAlreadyExists
+from app.models import Scopes
+from app.schemas.scopes import ScopeResponse, ScopeCreate
+from app.schemas.default import DeletedResponse
+from app.handlers.errors.scopes import ScopeNotFound, ScopeAlreadyExists
 
 
 def get_scopes(db: Session):
@@ -12,7 +12,7 @@ def get_scopes(db: Session):
     scopes = db.scalars(select(Scopes).order_by(Scopes.id)).all()
 
     response = dict(
-        users=list(
+        scopes=list(
             ScopeResponse(id=x.id, name=x.scope_name, claims=x.claims)
             for x in scopes)
     )
@@ -55,4 +55,4 @@ def delete_scope(db: Session, scope_id: str):
     db.delete(scope)
     db.commit()
 
-    return DeletedResponse()
+    return DeletedResponse

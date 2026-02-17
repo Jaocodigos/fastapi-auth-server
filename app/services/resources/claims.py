@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import select
 
-from models import Claims
-from schemas.claims import ClaimCreate, ClaimResponse
+from app.models import Claims
+from app.schemas.claims import ClaimCreate, ClaimResponse
 
-from schemas.default import DeletedResponse
-from handlers.errors.claims import ClaimNotFound, ClaimAlreadyExists
+from app.schemas.default import DeletedResponse
+from app.handlers.errors.claims import ClaimNotFound, ClaimAlreadyExists
 
 
 def get_claims(db: Session):
@@ -20,7 +20,7 @@ def get_claims(db: Session):
 
     return response
 
-def create_claim(db: Session, data: ClaimCreate):
+def create_claim(db: Session, data: ClaimCreate) -> ClaimResponse:
 
     exists = db.execute(
         select(Claims).where(Claims.claim_name == data.name)
@@ -37,7 +37,10 @@ def create_claim(db: Session, data: ClaimCreate):
     db.commit()
     db.refresh(claim)
 
-    return claim
+    return ClaimResponse(
+        id=claim.id,
+        name=claim.claim_name
+    )
 
 
 def delete_claim(db: Session, claim_id: str):
@@ -52,4 +55,4 @@ def delete_claim(db: Session, claim_id: str):
     db.delete(claim)
     db.commit()
 
-    return DeletedResponse()
+    return DeletedResponse

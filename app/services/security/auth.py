@@ -6,7 +6,7 @@ from app.schemas.clients import BaseClient
 
 
 def admin_auth(admin_token: str = Header(...)):
-    if admin_token != settings.ADMIN_TOKEN:
+    if not admin_token or admin_token != settings.ADMIN_TOKEN:
         raise HTTPException(status_code=403, detail="forbidden")
 
 

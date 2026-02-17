@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 
 from app.db.session import get_db
-from services.resources.token import issue_token, validate_and_issue_refresh_token, issue_refresh_token
-from services.resources.oauth import validate_code_and_return_user, validate_client
+from app.services.resources.token import issue_token, validate_and_issue_refresh_token, issue_refresh_token
+from app.services.resources.oauth import validate_code_and_return_user, validate_client
 from app.schemas.token import TokenExchange, TokenResponse
 
 router = APIRouter(prefix="/api", tags=["Oauth 2.0"])

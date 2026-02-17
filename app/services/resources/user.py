@@ -54,4 +54,4 @@ def erase_user(db: Session, user_id: str):
     db.delete(user)
     db.commit()
 
-    return DeletedResponse()
+    return DeletedResponse

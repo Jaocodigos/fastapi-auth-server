@@ -6,7 +6,7 @@ from app.db.session import get_db
 from app.schemas.clients import ClientCreate
 from app.schemas.default import DeletedResponse
 from app.services.security.auth import admin_auth
-from services.resources.client import get_all_clients, create_client, erase_client
+from app.services.resources.client import get_all_clients, create_client, erase_client
 
 router = APIRouter(prefix="/api", tags=["Clients"])
 

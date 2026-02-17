@@ -11,7 +11,7 @@ from app.services.security.crypt import verify_hash
 from app.schemas.login import Login
 
 router = APIRouter(tags=["Login"])
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/login", response_class=HTMLResponse)

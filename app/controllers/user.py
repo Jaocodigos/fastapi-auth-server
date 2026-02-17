@@ -5,7 +5,7 @@ from typing import Annotated
 
 from app.db.session import get_db
 from app.schemas.users import UserCreate, UserResponse
-from services.resources.user import create_user, get_all_users, erase_user
+from app.services.resources.user import create_user, get_all_users, erase_user
 
 router = APIRouter(prefix="/api", tags=["Users"])
 
@@ -23,7 +23,7 @@ def register_user(payload: Annotated[UserCreate, Body()], db: Session = Depends(
     return user
 
 @router.delete("/users/{user_id}", status_code=200)
-def delete_users(user_id: int, db: Session = Depends(get_db)):
+def delete_users(user_id: str, db: Session = Depends(get_db)):
 
     return erase_user(db=db, user_id=user_id)
 

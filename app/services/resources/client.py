@@ -22,7 +22,9 @@ def get_all_clients(db: Session):
                 scopes=x.allowed_scopes,
                 response_type=x.response_type,
                 client_type=x.client_type,
-                token_exp=x.token_exp
+                token_exp=x.token_exp,
+                code_exp=x.code_exp,
+                refresh_token_exp=x.refresh_token_exp
             ).model_dump(exclude_none=True)
             for x in clients)
     )

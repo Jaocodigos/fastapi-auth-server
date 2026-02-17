@@ -6,7 +6,7 @@ from typing import Annotated
 
 from app.db.session import get_db
 from app.schemas.authorize import AuthorizeParams
-from services.resources.oauth import generate_code
+from app.services.resources.oauth import generate_code
 
 router = APIRouter(prefix="/api", tags=["Oauth 2.0"])
 
@@ -33,4 +33,4 @@ def authorize(
 
         redirect_url += f"&state={params.state}"
 
-    return RedirectResponse(url=redirect_url)
+    return RedirectResponse(url=redirect_url, status_code=302)
