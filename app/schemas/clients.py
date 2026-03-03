@@ -2,6 +2,7 @@ from pydantic import BaseModel, AnyHttpUrl, model_validator
 from typing import List, Self, Optional
 
 class ClientCreate(BaseModel):
+    name: str
     redirect_uri: AnyHttpUrl
     grant_types: list[str]
     client_type: str
@@ -32,6 +33,7 @@ class ClientCreate(BaseModel):
         return self
 
 class ClientResponse(BaseModel):
+    name: str
     client_id: str
     client_secret: Optional[str]
     redirect_uri: str

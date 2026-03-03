@@ -3,11 +3,26 @@ from fastapi import Header, HTTPException, status, Depends
 
 from app.core.config import settings
 from app.schemas.clients import BaseClient
+from app.handlers.errors.default import UnauthorizedError, ForbiddenError
 
 
 def admin_auth(admin_token: str = Header(...)):
     if not admin_token or admin_token != settings.ADMIN_TOKEN:
-        raise HTTPException(status_code=403, detail="forbidden")
+        raise ForbiddenError("Forbidden access.")
+
+
+def token_authentication(admin_token: str = Header(...)):
+    if not admin_token or admin_token != settings.ADMIN_TOKEN:
+        raise UnauthorizedError("Unauthorized access.")
+
+
+def token_or_admin_authentication(admin_token: str = Header(default=None), token: str = Header(default=None)):
+    if admin_token:
+        admin_auth(admin_token)
+    elif token:
+        token_authentication(token)
+    else:
+        raise UnauthorizedError("Unauthorized access.")
 
 
 def decode_basic_auth(authorization = Header(None)) -> BaseClient:

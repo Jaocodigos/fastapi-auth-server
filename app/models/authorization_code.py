@@ -13,7 +13,7 @@ class AuthorizationCode(Default, Base):
         String(100), ForeignKey("clients.client_id"), nullable=False
     )
 
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[str] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False
     )

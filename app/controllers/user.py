@@ -10,20 +10,24 @@ from app.services.resources.user import create_user, get_all_users, erase_user
 router = APIRouter(prefix="/api", tags=["Users"])
 
 
-@router.get("/users")
-def get_users(db: Session = Depends(get_db)):
+@router.get("/{client_name}/users")
+def get_users(client_name: str, db: Session = Depends(get_db)):
 
-    return get_all_users(db)
+    return get_all_users(db, client_name=client_name)
 
-@router.post("/users", response_model=UserResponse, status_code=201)
-def register_user(payload: Annotated[UserCreate, Body()], db: Session = Depends(get_db)):
+@router.post("/{client_name}/users", response_model=UserResponse, status_code=201)
+def register_user(
+    client_name: str,
+    payload: Annotated[UserCreate, Body()],
+    db: Session = Depends(get_db)
+):
 
-    user = create_user(db, payload)
+    user = create_user(db, payload, client_name=client_name)
 
     return user
 
-@router.delete("/users/{user_id}", status_code=200)
-def delete_users(user_id: str, db: Session = Depends(get_db)):
+@router.delete("/{client_name}/users/{username}", status_code=200)
+def delete_users(client_name: str, username: str, db: Session = Depends(get_db)):
 
-    return erase_user(db=db, user_id=user_id)
+    return erase_user(db=db, username=username, client_name=client_name)
 

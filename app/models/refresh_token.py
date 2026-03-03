@@ -10,7 +10,7 @@ class RefreshToken(Default, Base):
 
     token_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[str] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False
     )
@@ -28,7 +28,7 @@ class RefreshToken(Default, Base):
 
     revoked_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
-    replaced_by: Mapped[int | None] = mapped_column(
+    replaced_by: Mapped[str | None] = mapped_column(
         ForeignKey("refresh_tokens.id"),
         nullable=True
     )
@@ -43,6 +43,6 @@ class RefreshToken(Default, Base):
     def revoke(self) -> None:
         self.expires_at = datetime.now(UTC)
 
-    def rotate(self, new_refresh_token: int) -> None:
+    def rotate(self, new_refresh_token: str) -> None:
         self.revoke()
         self.replaced_by = new_refresh_token

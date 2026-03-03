@@ -10,6 +10,7 @@ from fastapi.security import HTTPBasic
 
 from app.models.authorization_code import AuthorizationCode
 from app.models.client import OAuthClient
+from app.models.user import User
 from app.schemas.authorize import AuthorizeParams
 from app.schemas.token import TokenExchange
 from app.schemas.clients import BaseClient
@@ -17,6 +18,8 @@ from app.handlers.errors.default import OauthError
 from app.services.security.crypt import generate_secret
 from app.services.security.auth import decode_basic_auth
 from app.db.session import get_db
+from app.services.resources.client import get_client
+from app.services.resources.user import get_user
 
 security = HTTPBasic()
 
@@ -31,10 +34,14 @@ def verify_pkce(code_verifier: str, code_challenge: str) -> bool:
 def generate_code(user_id: str, data: AuthorizeParams, db: Session) -> str:
 
     # 1. client
-    client = db.execute(select(OAuthClient).filter_by(client_id=data.client_id)).scalar_one_or_none()
+    client = get_client(db, client_id=data.client_id, return_none=True)
 
     if not client:
         raise OauthError("invalid_client")
+
+    user = get_user(db, data.client_id, user_id=user_id, return_none=True)
+    if not user or user.client_id != client.client_id:
+        raise OauthError("access_denied", status_code=403)
 
     # 2. redirect_uri
     if data.redirect_uri != client.redirect_uri:
@@ -76,9 +83,9 @@ def validate_client(data: Annotated[TokenExchange, Body],
 
     # confidential client
     if credentials.client_id:
-        client = db.execute(select(OAuthClient).filter_by(client_id=credentials.client_id)).scalar_one_or_none()
+        client = get_client(db, client_id=credentials.client_id, return_none=True)
     else:
-        client = db.execute(select(OAuthClient).filter_by(client_id=data.client_id)).scalar_one_or_none()
+        client = get_client(db, client_id=data.client_id, return_none=True)
 
     if not client:
         raise OauthError("invalid_client", status_code=401)
@@ -97,7 +104,7 @@ def validate_client(data: Annotated[TokenExchange, Body],
     return client
 
 
-def validate_code_and_return_user(data: TokenExchange, db: Session) -> int:
+def validate_code_and_return_user(data: TokenExchange, db: Session) -> str:
 
     auth_code = db.execute(select(AuthorizationCode).filter_by(code=data.code, client_id=data.client_id)).scalar_one_or_none()
 

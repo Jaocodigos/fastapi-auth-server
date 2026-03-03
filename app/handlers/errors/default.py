@@ -17,6 +17,15 @@ class UnauthorizedError(Exception):
         self.message = message
         super().__init__(message)
 
+class ForbiddenError(Exception):
+
+    status_code = 403
+    error_code = "FORBIDDEN"
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
+
 class NotFoundError(Exception):
 
     status_code = 404

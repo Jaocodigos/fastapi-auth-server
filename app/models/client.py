@@ -9,6 +9,8 @@ from app.models.default import Default
 class OAuthClient(Default, Base):
     __tablename__ = "clients"
 
+    name: Mapped[str] = mapped_column(String(150), unique=True, index=True)
+
     client_id: Mapped[str] = mapped_column(String(100), unique=True, index=True)
 
     client_secret: Mapped[str] = mapped_column(String(100), unique=True, nullable=True) # May depend on client_type
@@ -32,6 +34,11 @@ class OAuthClient(Default, Base):
     grant_types: Mapped[list["GrantType"]] = relationship(
         secondary="client_grant_types",
         lazy="selectin"
+    )
+
+    users: Mapped[list["User"]] = relationship(
+        back_populates="client",
+        cascade="all, delete-orphan"
     )
 
     @property

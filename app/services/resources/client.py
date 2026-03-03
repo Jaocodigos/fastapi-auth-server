@@ -14,10 +14,14 @@ def get_all_clients(db: Session):
         return {"clients": []}
 
     payload = dict(
+
         clients=list(
+
             ClientResponse(
+
                 client_id=x.client_id,
                 client_secret=None,
+                name=x.name,
                 redirect_uri=x.redirect_uri,
                 scopes=x.allowed_scopes,
                 response_type=x.response_type,
@@ -25,6 +29,7 @@ def get_all_clients(db: Session):
                 token_exp=x.token_exp,
                 code_exp=x.code_exp,
                 refresh_token_exp=x.refresh_token_exp
+
             ).model_dump(exclude_none=True)
             for x in clients)
     )
@@ -33,9 +38,15 @@ def get_all_clients(db: Session):
 
 def create_client(db: Session, data: ClientCreate):
 
+    exists = db.execute(select(OAuthClient).filter_by(name=data.name)).scalar_one_or_none()
+
+    if exists:
+        raise ClientError("Client name already exists")
+
     client_id = generate_secret(24)
 
     client = OAuthClient(
+        name=data.name,
         client_id=client_id,
         redirect_uri=str(data.redirect_uri),
         response_type=data.response_type,
@@ -48,6 +59,7 @@ def create_client(db: Session, data: ClientCreate):
     for x in data.grant_types:
 
         grant = db.execute(select(GrantType).filter_by(name=x)).scalar_one_or_none()
+
         if grant is None:
             raise ClientError("Invalid grant type")
 
@@ -56,6 +68,7 @@ def create_client(db: Session, data: ClientCreate):
     for x in data.scopes:
 
         scope = db.execute(select(Scopes).filter_by(scope_name=x)).scalar_one_or_none()
+
         if scope is None:
             raise ScopeNotFound()
 
@@ -69,13 +82,14 @@ def create_client(db: Session, data: ClientCreate):
     db.commit()
 
     return ClientResponse(
+        name=client.name,
         client_id=client_id,
         client_secret=secret,
         redirect_uri=client.redirect_uri,
         scopes=client.allowed_scopes,
         token_exp=client.token_exp,
-        refresh_token_exp=client.token_exp,
-        code_exp=client.token_exp,
+        refresh_token_exp=client.refresh_token_exp,
+        code_exp=client.code_exp,
         client_type=client.client_type,
         response_type=client.response_type
     )
@@ -83,10 +97,34 @@ def create_client(db: Session, data: ClientCreate):
 def erase_client(db: Session, client_id: str):
 
     client = db.execute(select(OAuthClient).filter_by(client_id=client_id)).scalar_one_or_none()
+
     if not client:
         raise ClientNotFound()
 
     db.delete(client)
     db.commit()
 
+
+def get_client(db: Session, client_name=None, client_id=None, return_none=False) -> OAuthClient | None:
+    
+    client_filters = []
+
+    if client_name is not None:
+
+        client_filters.append(OAuthClient.name == client_name)
+
+    if client_id is not None:
+
+        client_filters.append(OAuthClient.client_id == client_id)
+    
+    client = db.execute(select(OAuthClient).where(*client_filters)).scalar_one_or_none()
+
+    if not client:
+
+        if return_none:
+            return None
+
+        raise ClientNotFound()
+
+    return client
 
