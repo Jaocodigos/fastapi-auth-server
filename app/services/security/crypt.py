@@ -4,14 +4,20 @@ import base64
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from passlib.context import CryptContext
-import bcrypt
-
 from app.schemas.jwks import JWKResponse
 from app.core.config import settings
 
 # Hashing
 
-crypt_context = CryptContext(schemes=["argon2"], deprecated="auto")
+crypt_context = CryptContext(
+    schemes=["argon2"],
+    deprecated="auto",
+    argon2__time_cost=3,
+    argon2__memory_cost=65536,  # 64 MiB (OWASP recommended)
+    argon2__parallelism=4, # Depends on server memory size
+    argon2__hash_len=32,
+    argon2__salt_size=16,
+)
 
 
 def hash_content(data: str) -> str:
