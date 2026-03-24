@@ -41,7 +41,6 @@ def token_endpoint(data: Annotated[TokenExchange, Body()],
     token = issue_token(
         subject=str(user),
         scopes=client.allowed_scopes,
-        audience=client.redirect_uri,
         client_exp=client.token_exp,
         refresh_token=refresh_token
     )

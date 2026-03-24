@@ -10,7 +10,6 @@ from fastapi.security import HTTPBasic
 
 from app.models.authorization_code import AuthorizationCode
 from app.models.client import OAuthClient
-from app.models.user import User
 from app.schemas.authorize import AuthorizeParams
 from app.schemas.token import TokenExchange
 from app.schemas.clients import BaseClient

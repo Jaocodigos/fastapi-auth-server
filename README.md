@@ -27,8 +27,18 @@ pip install -r requirements.txt
 
 Obrigatorias:
 
-- `ADMIN_TOKEN`: token de administração para rotas protegidas por header `admin-token`.
+- `ADMIN_TOKEN_HASH`: hash SHA-256 do token de administração (veja abaixo como gerar).
 - `SECRET_KEY`: secret da sessão (`SessionMiddleware`).
+
+### Gerando o token de admin
+
+Execute o comando abaixo para gerar o par token/hash. Guarde o token em local seguro — apenas o hash vai para o `.env`:
+
+```bash
+python -c "import hashlib, secrets; t = secrets.token_urlsafe(32); print('Token (guarde com segurança):', t); print('Hash (ADMIN_TOKEN_HASH):', hashlib.sha256(t.encode()).hexdigest())"
+```
+
+O token gerado é usado no header `Authorization: Bearer <token>` nas chamadas à API. O hash é o valor da variável de ambiente.
 
 Recomendadas:
 
@@ -41,7 +51,7 @@ Recomendadas:
 Exemplo (PowerShell):
 
 ```powershell
-$env:ADMIN_TOKEN = "admin"
+$env:ADMIN_TOKEN_HASH = "<hash-gerado-acima>"
 $env:SECRET_KEY = "change-me"
 $env:SESSION_EXPIRE = "30"
 $env:APP_ENV = "dev"
@@ -51,11 +61,11 @@ $env:ISSUER = "http://localhost:8000"
 Exemplo (Linux):
 
 ```bash
-export ADMIN_TOKEN = "admin"
-export SECRET_KEY = "change-me"
-export SESSION_EXPIRE = "30"
-export APP_ENV = "dev"
-export ISSUER = "http://localhost:8000"
+export ADMIN_TOKEN_HASH="<hash-gerado-acima>"
+export SECRET_KEY="change-me"
+export SESSION_EXPIRE="30"
+export APP_ENV="dev"
+export ISSUER="http://localhost:8000"
 ```
 
 ## Como rodar
@@ -93,26 +103,13 @@ Na raiz do projeto:
 .\.venv\Scripts\pytest -q
 ```
 
-## Exemplo de integração com oidcdebugger.com(para testescurl --location 'http://localhost:8000/api/clients' \
---header 'admin-token: admin' \
---header 'Content-Type: application/json' \
---data '{
-    "redirect_uri": "https://oidcdebugger.com/debug",
-    "scopes": ["read", "write", "openid"],
-    "grant_types": ["authorization_code", "refresh_token"],
-    "client_type": "public",
-    "response_type": "code",
-    "token_exp": 5,
-    "refresh_token_exp": 10,
-    "code_exp": 3,
-    "name": "demo"
-}')
+## Exemplo de integração com oidcdebugger.com (para testes)
 
 ### 1) Criar client OAuth
 
 ```bash
 curl --location 'http://localhost:8000/api/clients' \
---header 'admin-token: {ADMIN_TOKEN_ENV}' \
+--header 'Authorization: Bearer {ADMIN_TOKEN}' \
 --header 'Content-Type: application/json' \
 --data '{
     "redirect_uri": "https://oidcdebugger.com/debug",
@@ -133,7 +130,7 @@ Guarde o `client_id` retornado.
 
 ```bash
 curl --location 'http://localhost:8000/api/demo/users' \
---header 'admin-token: {ADMIN_TOKEN_ENV}' \
+--header 'Authorization: Bearer {ADMIN_TOKEN}' \
 --header 'Content-Type: application/json' \
 --data '{
     "username": "john",

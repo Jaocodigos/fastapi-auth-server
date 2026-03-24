@@ -5,7 +5,7 @@ from typing import Annotated
 from app.db.session import get_db
 from app.schemas.clients import ClientCreate
 from app.schemas.default import DeletedResponse
-from app.services.security.auth import admin_auth
+from app.services.security.auth import admin_authentication
 from app.services.resources.client import get_all_clients, create_client, erase_client
 
 router = APIRouter(prefix="/api", tags=["Clients"])
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api", tags=["Clients"])
 @router.get("/clients")
 def get_clients(
     db: Session = Depends(get_db),
-    _: None = Depends(admin_auth),
+    _: None = Depends(admin_authentication),
 ):
 
     clients = get_all_clients(db=db)
@@ -25,7 +25,7 @@ def get_clients(
 def register_client(
     data: Annotated[ClientCreate, Body()],
     db: Session = Depends(get_db),
-    _: None = Depends(admin_auth),
+    _: None = Depends(admin_authentication),
 ):
 
     new_client = create_client(db=db, data=data)
@@ -36,7 +36,7 @@ def register_client(
 def delete_client(
         client_id: str,
         db: Session = Depends(get_db),
-        _: None = Depends(admin_auth),
+        _: None = Depends(admin_authentication),
 ):
 
     erase_client(db=db, client_id=client_id)

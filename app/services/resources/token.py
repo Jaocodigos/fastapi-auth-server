@@ -5,12 +5,12 @@ from jose import jwt
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.services.security.crypt import PRIVATE_KEY, generate_secret, hash_content
+from app.services.security.crypt import PRIVATE_KEY, PUBLIC_KEY, generate_secret, hash_content
 from app.schemas.token import TokenResponse
 from app.models.refresh_token import RefreshToken
-from app.handlers.errors.default import OauthError
+from app.handlers.errors.default import OauthError, UnauthorizedError
 
-def issue_token(subject: str, scopes: list[str], audience: str, client_exp: int, refresh_token=None) -> TokenResponse:
+def issue_token(subject: str, scopes: list[str], client_exp: int, refresh_token=None) -> TokenResponse:
 
     issued_at = datetime.now(UTC)
     expire = issued_at + timedelta(
@@ -20,7 +20,7 @@ def issue_token(subject: str, scopes: list[str], audience: str, client_exp: int,
     payload = {
         "sub": subject,
         "iss": settings.ISSUER,
-        "aud": audience,
+        "aud": settings.ISSUER,
         "scopes": scopes,
         "exp": expire,
     }
@@ -38,6 +38,30 @@ def issue_token(subject: str, scopes: list[str], audience: str, client_exp: int,
         token_type="bearer",
         refresh_token=refresh_token
     )
+
+def validate_access_token(token: str, required_scopes: list) -> bool :
+
+    try:
+        is_valid = jwt.decode(token, PUBLIC_KEY, algorithms=settings.JWT_ALGORITHM)
+
+    except Exception as e:
+        raise UnauthorizedError("Invalid access token.")
+
+    if is_valid["exp"] < datetime.now(UTC):
+        raise UnauthorizedError("Invalid access token.")
+
+    if is_valid["iss"] != settings.ISSUER:
+        raise UnauthorizedError("Invalid issuer.")
+
+    # In this case, the authorization server is a resource server too.
+    if is_valid["aud"] != settings.ISSUER:
+        raise UnauthorizedError("Invalid audience.")
+
+    if not all(x in is_valid["scopes"] for x in required_scopes):
+        raise UnauthorizedError("Invalid scopes for this operation.")
+
+    return True
+
 
 def issue_refresh_token(db: Session, user_id: str, client_id: str, refresh_token_exp: int) -> tuple[str, str]:
 

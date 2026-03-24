@@ -1,28 +1,39 @@
 import base64
+import hashlib
+import hmac
+
 from fastapi import Header, HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.core.config import settings
 from app.schemas.clients import BaseClient
 from app.handlers.errors.default import UnauthorizedError, ForbiddenError
+from app.services.resources.token import validate_access_token
 
 
-def admin_auth(admin_token: str = Header(...)):
-    if not admin_token or admin_token != settings.ADMIN_TOKEN:
+security_scheme = HTTPBearer(auto_error=False)
+
+def admin_authentication(token: HTTPAuthorizationCredentials | None = Depends(security_scheme)):
+
+    if not token:
+        raise UnauthorizedError("Unauthorized access.")
+
+    token_hash = hashlib.sha256(token.credentials.encode("utf-8")).hexdigest()
+    if not hmac.compare_digest(token_hash, settings.ADMIN_TOKEN_HASH):
+
         raise ForbiddenError("Forbidden access.")
 
 
-def token_authentication(admin_token: str = Header(...)):
-    if not admin_token or admin_token != settings.ADMIN_TOKEN:
+def authenticate(token: HTTPAuthorizationCredentials | None = Depends(security_scheme)):
+
+    if not token:
         raise UnauthorizedError("Unauthorized access.")
 
+    if token.credentials.count(".") == 2:
+        validate_access_token(token.credentials, ["read", "write"]) # SÓ POR ENQUANTO
 
-def token_or_admin_authentication(admin_token: str = Header(default=None), token: str = Header(default=None)):
-    if admin_token:
-        admin_auth(admin_token)
-    elif token:
-        token_authentication(token)
     else:
-        raise UnauthorizedError("Unauthorized access.")
+        admin_authentication(token)
 
 
 def decode_basic_auth(authorization = Header(None)) -> BaseClient:
