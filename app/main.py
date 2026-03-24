@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.db.session import engine, Base
 from app.db.app_start import seed_database
@@ -7,9 +9,12 @@ from app.core.config import validate_settings
 from app.core.routing import register_controllers
 from app.handlers.handler import register_error_handlers
 from app.core.scripts.generate_keys import ensure_keys_exist
+from app.core.limiter import limiter
 
 
 def create_app():
+
+
 
     app = FastAPI(
         title="Authorization Server",
@@ -20,6 +25,10 @@ def create_app():
             "github": "https://github.com/Jaocodigos"
         }
     )
+
+    # Adding rate limit
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # Custom Errors
     register_error_handlers(app)
@@ -44,7 +53,7 @@ def create_app():
     @app.on_event("startup")
     def startup():
 
-        from app.models import User, AuthorizationCode, OAuthClient, ClientScope, ScopesAndClaims, Claims, Scopes, RefreshToken, GrantType
+        from app.models import User, AuthorizationCode, OAuthClient, ClientScope, ScopesAndClaims, Claims, Scopes, RefreshToken, GrantType, PasswordPolicy
         Base.metadata.create_all(bind=engine)
         seed_database()
         ensure_keys_exist()
