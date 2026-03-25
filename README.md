@@ -2,6 +2,12 @@
 
 Authorization Server OAuth 2.0 (FastAPI) com fluxo `authorization_code` + PKCE (`S256`) e emissão de JWT assinados em `RS256`.
 
+## Observações
+
+- Apenas o README e os testes foram construídos com a ajuda de IA. O intuito do projeto é aprender sem depender tanto dela.
+- O projeto ainda não implementa `/.well-known/openid-configuration` e o endpoint `/userinfo`.
+- A camada OIDC está em desenvolvimento.
+
 ## Resumo rapido
 
 - API em FastAPI com endpoints: Clients, users, scopes, claims, `authorize`, `token` e JWKS.
@@ -157,7 +163,3 @@ No https://oidcdebugger.com/:
 - Faça login com o usuário criado.
 - O code volta para o oidcdebugger, que troca em `/api/token`.
 
-## Observações
-
-- O projeto ainda não implementa `/.well-known/openid-configuration` e o endpoint `/userinfo`.
-- Acamada OIDC ainda está em desenvolvimento.
