@@ -4,7 +4,7 @@ Authorization Server OAuth 2.0 (FastAPI) com fluxo `authorization_code` + PKCE (
 
 ## Observações
 
-- A IA foi utilizada para criação de testes e a construção do próprio README. Também usei para sanar dúvidas, mas toda lógica de negócio foi aplicada por mim,
+- A IA foi utilizada para auxílio na construção de testes e do próprio README. Também usei para sanar dúvidas, mas toda lógica de negócio foi aplicada por mim,
 afinal o intuito deste projeto é de fato entender como funciona na íntegra um **AS**.
 - O projeto ainda não implementa `/.well-known/openid-configuration` e o endpoint `/userinfo`.
 - A camada OIDC está em desenvolvimento.
