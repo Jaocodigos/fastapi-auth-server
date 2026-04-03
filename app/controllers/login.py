@@ -35,7 +35,7 @@ def login_submit(
 ):
     client = get_client(db, client_name=client_name)
 
-    user = get_user(db, client_id=client.client_id, username=form.username, return_none=True)
+    user = get_user(db, user_store_id=client.user_store_id, username=form.username, return_none=True)
 
     if not user or not verify_hash(form.password, user.password_hash):
         return templates.TemplateResponse(
@@ -44,6 +44,17 @@ def login_submit(
                 "request": request,
                 "client_name": client.name,
                 "error": "Invalid username or password.",
+            },
+            status_code=400,
+        )
+
+    if not user.is_active:
+        return templates.TemplateResponse(
+            "login.html",
+            {
+                "request": request,
+                "client_name": client.name,
+                "error": "Please verify your email before logging in.",
             },
             status_code=400,
         )
