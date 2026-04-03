@@ -50,7 +50,7 @@ def delete_scope(db: Session, scope_id: str):
     ).scalar_one_or_none()
 
     if not scope:
-        ScopeNotFound()
+        raise ScopeNotFound()
 
     db.delete(scope)
     db.commit()

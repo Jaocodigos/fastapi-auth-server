@@ -50,7 +50,7 @@ def delete_claim(db: Session, claim_id: str):
     ).scalar_one_or_none()
 
     if not claim:
-        ClaimNotFound()
+        raise ClaimNotFound()
 
     db.delete(claim)
     db.commit()

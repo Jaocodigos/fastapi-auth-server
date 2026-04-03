@@ -9,4 +9,5 @@ class ClaimAlreadyExists(AlreadyExistsError):
 
     def __init__(self, claim=None):
         self.message = f"Claim '{claim}' already exists."
+        super().__init__(self.message)
 
