@@ -7,4 +7,6 @@ from app.models.claims import Claims
 from app.models.scopes import Scopes
 from app.models.grant_types import GrantType
 from app.models.refresh_token import RefreshToken
+from app.models.password_policy import PasswordPolicy
+from app.models.user_store import UserStore
 

@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import String, Integer
+from sqlalchemy import String, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.session import Base
 from app.services.security.crypt import generate_secret, hash_content
@@ -36,10 +36,22 @@ class OAuthClient(Default, Base):
         lazy="selectin"
     )
 
-    users: Mapped[list["User"]] = relationship(
+
+    password_policy: Mapped["PasswordPolicy | None"] = relationship(
+        "PasswordPolicy",
         back_populates="client",
+        uselist=False, # Because it's a 1:0..1 relation
         cascade="all, delete-orphan"
     )
+
+    user_store_id: Mapped[str] = mapped_column(
+        String(100),
+        ForeignKey("user_store.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
+
+    user_store: Mapped["UserStore | None"] = relationship(back_populates="clients")
 
     @property
     def allowed_scopes(self) -> List[str]:

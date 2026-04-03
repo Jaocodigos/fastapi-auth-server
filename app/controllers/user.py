@@ -37,7 +37,7 @@ def delete_users(
     client_name: str,
     username: str,
     db: Session = Depends(get_db),
-    _: None = Depends(get_db)
+    _: None = Depends(authenticate)
 ):
 
     return erase_user(db=db, username=username, client_name=client_name)

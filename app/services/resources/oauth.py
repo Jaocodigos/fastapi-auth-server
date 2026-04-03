@@ -38,8 +38,8 @@ def generate_code(user_id: str, data: AuthorizeParams, db: Session) -> str:
     if not client:
         raise OauthError("invalid_client")
 
-    user = get_user(db, data.client_id, user_id=user_id, return_none=True)
-    if not user or user.client_id != client.client_id:
+    user = get_user(db, client.user_store_id, user_id=user_id, return_none=True)
+    if not user or user.user_store_id != client.user_store_id:
         raise OauthError("access_denied", status_code=403)
 
     # 2. redirect_uri
