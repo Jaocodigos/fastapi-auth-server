@@ -8,13 +8,19 @@ Authorization Server OAuth 2.0 (FastAPI) com fluxo `authorization_code` + PKCE (
 afinal o intuito deste projeto é de fato entender como funciona na íntegra um **AS**.
 - O projeto ainda não implementa `/.well-known/openid-configuration` e o endpoint `/userinfo`.
 - A camada OIDC está em desenvolvimento.
+- Endpoints de `revoke` e `introspect` ainda não implementados (requerem persistência de access tokens).
 
 ## Resumo rapido
 
-- API em FastAPI com endpoints: Clients, users, scopes, claims, `authorize`, `token` e JWKS.
-- Persistência local(por hora) em SQLite (`app/auth.db`).
+- API em FastAPI com endpoints: Clients, users, scopes, claims, `authorize`, `token`, JWKS, self-registration e verificação de email.
+- Persistência local (por hora) em SQLite (`app/auth.db`).
 - Chaves RSA (`private.pem` / `public.pem`) geradas automaticamente no startup (se não existirem).
 - Login web por cliente em `/{client_name}/login`.
+- Auto-cadastro de usuários via `/{client_name}/register` com verificação de email.
+- Rate limiting via `slowapi` nos endpoints de registro e verificação.
+- Hashing de senhas com Argon2 (recomendação OWASP).
+- Refresh token com rotação e revogação.
+- Password policies por client.
 
 ## Requisitos
 
@@ -32,10 +38,10 @@ pip install -r requirements.txt
 
 ## Envs
 
-Obrigatorias:
+Obrigatórias:
 
 - `ADMIN_TOKEN_HASH`: hash SHA-256 do token de administração (veja abaixo como gerar).
-- `SECRET_KEY`: secret da sessão (`SessionMiddleware`).
+- `SECRET_KEY`: secret da sessão (`SessionMiddleware`) e dos tokens de verificação de email.
 
 ### Gerando o token de admin
 
@@ -51,9 +57,19 @@ Recomendadas:
 
 - `SESSION_EXPIRE`: expiração da sessão em minutos (padrão: `30`).
 - `APP_ENV`: `development` (padrão), `dev`, `prod`, `test` etc.
-- `ISSUER`: valor de `iss` no JWT.
+- `ISSUER`: valor de `iss` no JWT (também usado para montar o link de verificação de email).
 - `PRIVATE_KEY_PATH`: caminho da chave privada (padrão: `private.pem`).
 - `PUBLIC_KEY_PATH`: caminho da chave publica (padrão: `public.pem`).
+
+Email (necessário para self-registration):
+
+- `MAIL_FROM`: endereço remetente (padrão: `noreply@localhost.acme`).
+- `MAIL_SERVER`: hostname do servidor SMTP (padrão: `localhost`).
+- `MAIL_PORT`: porta SMTP (padrão: `1025`).
+- `MAIL_USERNAME`: usuário SMTP (opcional).
+- `MAIL_PASSWORD`: senha SMTP (opcional).
+- `MAIL_STARTTLS`: habilitar STARTTLS (padrão: `false`).
+- `MAIL_SSL_TLS`: habilitar SSL/TLS (padrão: `false`).
 
 Exemplo (PowerShell):
 
@@ -63,6 +79,9 @@ $env:SECRET_KEY = "change-me"
 $env:SESSION_EXPIRE = "30"
 $env:APP_ENV = "dev"
 $env:ISSUER = "http://localhost:8000"
+$env:MAIL_SERVER = "localhost"
+$env:MAIL_PORT = "1025"
+$env:MAIL_FROM = "noreply@localhost.acme"
 ```
 
 Exemplo (Linux):
@@ -73,6 +92,9 @@ export SECRET_KEY="change-me"
 export SESSION_EXPIRE="30"
 export APP_ENV="dev"
 export ISSUER="http://localhost:8000"
+export MAIL_SERVER="localhost"
+export MAIL_PORT="1025"
+export MAIL_FROM="noreply@localhost.acme"
 ```
 
 ## Como rodar
@@ -93,14 +115,38 @@ Docs locais:
 
 ## Endpoints principais
 
+**OAuth 2.0:**
 - `GET /api/authorize`
 - `POST /api/token`
 - `GET /api/.well-known/jwks.json`
-- `GET/POST /{client_name}/login`
-- `GET/POST/DELETE /api/clients` (admin)
-- `GET/POST/DELETE /api/{client_name}/users`
-- `GET/POST/DELETE /api/scopes`
-- `GET/POST/DELETE /api/claims` (admin-token ou token)
+
+**Login:**
+- `GET /{client_name}/login`
+- `POST /{client_name}/login`
+
+**Self-registration:**
+- `POST /{client_name}/register` (rate limit: 3/min)
+- `GET /{client_name}/verify` (rate limit: 5/min)
+
+**Clients (admin-token):**
+- `GET /api/clients`
+- `POST /api/clients`
+- `DELETE /api/clients/{client_id}`
+
+**Users:**
+- `GET /api/{client_name}/users` (admin-token)
+- `POST /api/{client_name}/users` (admin-token)
+- `DELETE /api/{client_name}/users/{username}` (admin-token)
+
+**Scopes:**
+- `GET /api/scopes`
+- `POST /api/scopes`
+- `DELETE /api/scopes/{scope_id}`
+
+**Claims:**
+- `GET /api/claims` (admin-token ou token)
+- `POST /api/claims` (admin-token ou token)
+- `DELETE /api/claims/{claim_id}` (admin-token ou token)
 
 ## Como rodar testes
 
@@ -133,7 +179,7 @@ curl --location 'http://localhost:8000/api/clients' \
 
 Guarde o `client_id` retornado.
 
-### 2) Criar usuario para esse client
+### 2) Criar usuário para esse client
 
 ```bash
 curl --location 'http://localhost:8000/api/demo/users' \
@@ -163,4 +209,3 @@ No https://oidcdebugger.com/:
 - O servidor redireciona para `http://localhost:8000/oidcdebugger/login`.
 - Faça login com o usuário criado.
 - O code volta para o oidcdebugger, que troca em `/api/token`.
-
