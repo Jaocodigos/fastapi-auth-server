@@ -1,5 +1,21 @@
-from pydantic import BaseModel, AnyHttpUrl, model_validator
+from pydantic import BaseModel, AnyHttpUrl, model_validator, Field
 from typing import List, Self, Optional
+
+
+class PasswordPolicyCreate(BaseModel):
+    min_length: int = Field(default=8, ge=6, le=128)
+    max_length: int = Field(default=128, ge=8, le=256)
+    require_uppercase: bool = False
+    require_lowercase: bool = False
+    require_digits: bool = False
+    require_special: bool = False
+
+    @model_validator(mode="after")
+    def validate_lengths(self) -> Self:
+        if self.min_length >= self.max_length:
+            raise ValueError("min_length must be less than max_length")
+        return self
+
 
 class ClientCreate(BaseModel):
     name: str
@@ -11,6 +27,8 @@ class ClientCreate(BaseModel):
     token_exp: int
     refresh_token_exp: int
     code_exp: int
+    password_policy: Optional[PasswordPolicyCreate] = None
+
 
     @model_validator(mode="after")
     def validate_scope(self) -> Self:
@@ -48,4 +66,3 @@ class ClientResponse(BaseModel):
 class BaseClient(BaseModel):
     client_id: Optional[str] = None
     client_secret: Optional[str] = None
-

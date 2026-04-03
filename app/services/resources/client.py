@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import select
 
-from app.models import OAuthClient, Scopes, GrantType
+from app.models import OAuthClient, Scopes, GrantType, PasswordPolicy
 from app.schemas.clients import ClientCreate, ClientResponse
 from app.handlers.errors import ClientNotFound, ScopeNotFound, ClientError
 from app.services.security.crypt import generate_secret
@@ -74,11 +74,25 @@ def create_client(db: Session, data: ClientCreate):
 
         client.scopes.append(scope)
 
+    db.add(client)
+
+    if data.password_policy:
+
+        policy = PasswordPolicy(
+            client_id=client_id,
+            min_length=data.password_policy.min_length,
+            max_length=data.password_policy.max_length,
+            require_uppercase=data.password_policy.require_uppercase,
+            require_lowercase=data.password_policy.require_lowercase,
+            require_digits=data.password_policy.require_digits,
+            require_special=data.password_policy.require_special
+        )
+        db.add(policy)
+
 
     # Public clients can have a secret, even they don't use?
     secret = client.generate_secret()
 
-    db.add(client)
     db.commit()
 
     return ClientResponse(
