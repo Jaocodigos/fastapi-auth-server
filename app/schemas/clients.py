@@ -20,7 +20,7 @@ class PasswordPolicyCreate(BaseModel):
 class ClientCreate(BaseModel):
     name: str
     redirect_uri: AnyHttpUrl
-    grant_types: list[str]
+    grant_types: List[str]
     client_type: str
     scopes: List[str]
     response_type: str
