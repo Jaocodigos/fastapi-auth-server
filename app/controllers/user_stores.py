@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api", tags=["User Store"])
 def get_user_stores(
     user_store_id: str,
     db: Session = Depends(get_db),
+
     _: None = Depends(authenticate)
 ):
 

@@ -4,7 +4,7 @@ from sqlalchemy.sql import select
 from app.models import UserStore
 from app.schemas.user_stores import UserStoreCreate, UserStoreResponse
 from app.schemas.default import DeletedResponse
-from app.handlers.errors.user import UserNotFound, UserAlreadyExists
+from app.handlers.errors.user_stores import UserStoreAlreadyExists, UserStoreNotFound
 from app.services.resources.client import get_client
 
 SPECIAL_CHARS = "!@#$%^&*(),.?\":{}|<>"
@@ -27,7 +27,7 @@ def get_user_store(db: Session, user_store_id=None, user_store_name=None, return
         if return_none:
             return None
 
-        raise UserNotFound() # TODO CHANGE
+        raise UserStoreNotFound()
 
     return us
 
@@ -42,7 +42,7 @@ def create_user_store(db: Session, data: UserStoreCreate):
     exists = get_user_store(db, user_store_name=data.name)
 
     if exists:
-        raise UserAlreadyExists(data.name) # TODO CHANGE
+        raise UserStoreAlreadyExists(data.name)
 
     user = UserStore(
         name=data.name,
