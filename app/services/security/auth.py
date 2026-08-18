@@ -19,7 +19,7 @@ def admin_authentication(token: HTTPAuthorizationCredentials | None = Depends(se
         raise UnauthorizedError("Unauthorized access.")
 
     token_hash = hashlib.sha256(token.credentials.encode("utf-8")).hexdigest()
-    if not hmac.compare_digest(token_hash, settings.ADMIN_TOKEN_HASH):
+    if not hmac.compare_digest(token_hash, settings.ADMIN_TOKEN):
 
         raise ForbiddenError("Forbidden access.")
 

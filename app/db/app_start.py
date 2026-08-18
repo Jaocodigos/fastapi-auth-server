@@ -21,6 +21,7 @@ SUPPORTED_SCOPES = [
 ]
 
 def seed_database() -> None:
+
     db = SessionLocal()
     try:
 

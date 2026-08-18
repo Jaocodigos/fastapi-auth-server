@@ -2,7 +2,7 @@ from app.handlers.errors.default import NotFoundError, AlreadyExistsError
 
 class UserStoreNotFound(NotFoundError):
 
-    message = "User Store not found."
+    message = "User Store not found for this client."
 
 class UserStoreAlreadyExists(AlreadyExistsError):
 

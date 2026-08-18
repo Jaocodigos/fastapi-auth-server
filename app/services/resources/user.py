@@ -5,7 +5,7 @@ from app.models.user import User
 from app.schemas.users import UserCreate, UserResponse, UserSelfRegister
 from app.schemas.default import DeletedResponse
 from app.services.security.crypt import hash_content
-from app.handlers.errors.user import UserNotFound, UserAlreadyExists, InvalidVerificationToken, PasswordPolicyViolation
+from app.handlers.errors import UserNotFound, UserAlreadyExists, UserStoreNotFound, InvalidVerificationToken, PasswordPolicyViolation
 from app.services.resources.client import get_client
 from app.services.email.verification import create_verification_token, decode_verification_token
 from app.services.email.sender import send_verification_email
@@ -63,6 +63,9 @@ def create_user(db: Session, data: UserCreate, client_name: str):
 
     if exists:
         raise UserAlreadyExists(data.username)
+
+    if not client.has_user_store():
+        raise UserStoreNotFound()
 
     user = User(
         username=data.username,

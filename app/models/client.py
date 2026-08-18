@@ -80,3 +80,6 @@ class OAuthClient(Default, Base):
     def validate_redirect_uri(self, redirect_uri: str) -> bool:
         return redirect_uri == self.redirect_uri
 
+    def has_user_store(self) -> bool:
+        return self.user_store_id is not None
+

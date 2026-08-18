@@ -8,6 +8,7 @@ def test_authorize_requires_login(client):
     redirect_uri = f"https://example.com/callback/{uuid.uuid4().hex}"
     _, client_response = create_client(client, redirect_uri=redirect_uri)
     client_id = client_response["client_id"]
+    client_name = client_response["name"]
 
     params = {
         "response_type": "code",
@@ -20,30 +21,23 @@ def test_authorize_requires_login(client):
     response = client.get("/api/authorize", params=params, follow_redirects=False)
 
     assert response.status_code == 302
-    assert response.headers["location"] == "/login"
+    assert response.headers["location"] == f"/{client_name}/login"
 
 
 def test_authorize_redirects_with_code(client):
     redirect_uri = f"https://example.com/callback/{uuid.uuid4().hex}"
     _, client_response = create_client(client, redirect_uri=redirect_uri)
     client_id = client_response["client_id"]
-    username, password, _ = create_user(client)
+    client_name = client_response["name"]
+    username, password, _ = create_user(client, client_name)
 
     login = client.post(
-        "/login",
+        f"/{client_name}/login",
         data={"username": username, "password": password},
         follow_redirects=False,
     )
     assert login.status_code == 302
 
-    params = {
-        "response_type": "code",
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "scope": "read",
-        "code_challenge": "0FLIKahrX7kqxncwhV5WD82lu_wi5GA8FsRSLubaOpU",
-        "code_challenge_method": "S256",
-    }
     response, code = authorize_code(client, client_id, redirect_uri)
 
     location = response.headers["location"]
@@ -59,10 +53,11 @@ def test_authorize_rejects_invalid_scope(client):
     redirect_uri = f"https://example.com/callback/{uuid.uuid4().hex}"
     _, client_response = create_client(client, redirect_uri=redirect_uri)
     client_id = client_response["client_id"]
-    username, password, _ = create_user(client)
+    client_name = client_response["name"]
+    username, password, _ = create_user(client, client_name)
 
     login = client.post(
-        "/login",
+        f"/{client_name}/login",
         data={"username": username, "password": password},
         follow_redirects=False,
     )

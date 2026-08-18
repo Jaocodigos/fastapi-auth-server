@@ -1,8 +1,13 @@
 import uuid
 
+from tests.utils import admin_headers, create_client, create_user
+
 
 def test_list_users_returns_list(client):
-    response = client.get("/api/users")
+    _, client_response = create_client(client, redirect_uri=f"https://example.com/callback/{uuid.uuid4().hex}")
+    client_name = client_response["name"]
+
+    response = client.get(f"/api/{client_name}/users", headers=admin_headers())
 
     assert response.status_code == 200
 
@@ -12,10 +17,15 @@ def test_list_users_returns_list(client):
 
 
 def test_create_user_returns_created_user(client):
+    _, client_response = create_client(client, redirect_uri=f"https://example.com/callback/{uuid.uuid4().hex}")
+    client_name = client_response["name"]
     username = f"test-user-{uuid.uuid4().hex}"
-    payload = {"username": username, "password": "test-password"}
 
-    response = client.post("/api/users", json=payload)
+    response = client.post(
+        f"/api/{client_name}/users",
+        json={"username": username, "password": "test-password"},
+        headers=admin_headers()
+    )
 
     assert response.status_code == 201
 
@@ -25,13 +35,11 @@ def test_create_user_returns_created_user(client):
 
 
 def test_delete_user_returns_success(client):
-    username = f"test-user-delete-{uuid.uuid4().hex}"
-    created = client.post("/api/users", json={"username": username, "password": "test-password"})
+    _, client_response = create_client(client, redirect_uri=f"https://example.com/callback/{uuid.uuid4().hex}")
+    client_name = client_response["name"]
+    username, _, _ = create_user(client, client_name)
 
-    assert created.status_code == 201
-
-    user_id = created.json()["id"]
-    response = client.delete(f"/api/users/{user_id}")
+    response = client.delete(f"/api/{client_name}/users/{username}", headers=admin_headers())
 
     assert response.status_code == 200
 
@@ -41,9 +49,11 @@ def test_delete_user_returns_success(client):
 
 
 def test_create_user_duplicate_returns_409(client):
+    _, client_response = create_client(client, redirect_uri=f"https://example.com/callback/{uuid.uuid4().hex}")
+    client_name = client_response["name"]
     username = f"test-user-dup-{uuid.uuid4().hex}"
-    client.post("/api/users", json={"username": username, "password": "test-password"})
 
-    response = client.post("/api/users", json={"username": username, "password": "test-password"})
+    client.post(f"/api/{client_name}/users", json={"username": username, "password": "test-password"}, headers=admin_headers())
+    response = client.post(f"/api/{client_name}/users", json={"username": username, "password": "test-password"}, headers=admin_headers())
 
     assert response.status_code == 409

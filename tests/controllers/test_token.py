@@ -11,9 +11,11 @@ def test_token_exchange_authorization_code(client):
         grant_types=["authorization_code", "refresh_token"],
     )
     client_id = client_response["client_id"]
-    username, password, _ = create_user(client)
+    client_name = client_response["name"]
+    username, password, _ = create_user(client, client_name)
+
     login = client.post(
-        "/login",
+        f"/{client_name}/login",
         data={"username": username, "password": password},
         follow_redirects=False,
     )
@@ -45,9 +47,11 @@ def test_token_exchange_refresh_token(client):
         grant_types=["authorization_code", "refresh_token"],
     )
     client_id = client_response["client_id"]
-    username, password, _ = create_user(client)
+    client_name = client_response["name"]
+    username, password, _ = create_user(client, client_name)
+
     login = client.post(
-        "/login",
+        f"/{client_name}/login",
         data={"username": username, "password": password},
         follow_redirects=False,
     )

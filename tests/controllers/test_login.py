@@ -4,26 +4,22 @@ from tests.utils import create_client, create_user
 
 
 def test_login_form_returns_html(client):
-    response = client.get("/login")
+    _, client_response = create_client(client, redirect_uri=f"https://example.com/callback/{uuid.uuid4().hex}")
+    client_name = client_response["name"]
+
+    response = client.get(f"/{client_name}/login")
 
     assert response.status_code == 200
     assert "text/html" in response.headers.get("content-type", "")
 
 
 def test_login_success_redirects(client):
-
-    # User
-
-    username = f"test-login-{uuid.uuid4().hex}"
-    username, password, _ = create_user(client, username=username)
-
-    # Client
-
-    client_payload, client_response = create_client(client, redirect_uri="https://oidcdebugger.com/")
-
-    # Authorize
-
+    redirect_uri = f"https://oidcdebugger.com/{uuid.uuid4().hex}"
+    client_payload, client_response = create_client(client, redirect_uri=redirect_uri)
     client_id = client_response["client_id"]
+    client_name = client_response["name"]
+
+    username, password, _ = create_user(client, client_name)
 
     authorize_params = {
         "response_type": "code",
@@ -37,20 +33,22 @@ def test_login_success_redirects(client):
     auth_response = client.get("/api/authorize", params=authorize_params, follow_redirects=False)
 
     assert auth_response.status_code == 302
-    assert auth_response.headers["location"] == "/login"
+    assert auth_response.headers["location"] == f"/{client_name}/login"
 
     response = client.post(
-        "/login",
+        f"/{client_name}/login",
         data={"username": username, "password": password},
         follow_redirects=False,
     )
 
     assert response.status_code == 302
-
     assert response.headers["location"].startswith("http://testserver/api/authorize")
 
 
 def test_login_invalid_credentials_returns_400(client):
-    response = client.post("/login", data={"username": "missing", "password": "wrong"})
+    _, client_response = create_client(client, redirect_uri=f"https://example.com/callback/{uuid.uuid4().hex}")
+    client_name = client_response["name"]
+
+    response = client.post(f"/{client_name}/login", data={"username": "missing", "password": "wrong"})
 
     assert response.status_code == 400

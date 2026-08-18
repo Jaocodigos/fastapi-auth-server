@@ -3,7 +3,7 @@ from tests.utils import admin_headers, create_client, make_client_payload
 def test_list_clients_requires_admin_header(client):
     response = client.get("/api/clients")
 
-    assert response.status_code == 422
+    assert response.status_code == 401
 
 
 def test_list_clients_rejects_invalid_admin_token(client):

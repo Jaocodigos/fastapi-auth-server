@@ -1,33 +1,43 @@
 import uuid
 from urllib.parse import parse_qs, urlparse
 
+TEST_ADMIN_TOKEN = "test-admin-token"
+
 
 def admin_headers(valid=True):
 
     if valid:
-        return {"admin-token": "test-admin-token"}
+        return {"Authorization": f"Bearer {TEST_ADMIN_TOKEN}"}
 
-    return {"admin-token": "test-admin-invalid"}
+    return {"Authorization": "Bearer test-admin-invalid"}
 
 
-def create_user(client, username=None, password="test-password"):
+def create_user(client, client_name, username=None, password="test-password"):
 
     if username is None:
         username = f"test-user-{uuid.uuid4().hex}"
 
-    response = client.post("/api/users", json={"username": username, "password": password})
+    response = client.post(
+        f"/api/{client_name}/users",
+        json={"username": username, "password": password},
+        headers=admin_headers()
+    )
 
     assert response.status_code == 201
 
     return username, password, response.json()
 
 
-def make_client_payload(redirect_uri, grant_types=None):
+def make_client_payload(redirect_uri, grant_types=None, name=None):
 
     if grant_types is None:
         grant_types = ["authorization_code"]
 
+    if name is None:
+        name = f"test-client-{uuid.uuid4().hex[:8]}"
+
     return {
+        "name": name,
         "redirect_uri": redirect_uri,
         "grant_types": grant_types,
         "client_type": "public",
@@ -39,13 +49,13 @@ def make_client_payload(redirect_uri, grant_types=None):
     }
 
 
-def create_client(client, redirect_uri, grant_types=None):
+def create_client(client, redirect_uri, grant_types=None, name=None):
 
-    payload = make_client_payload(redirect_uri=redirect_uri, grant_types=grant_types)
+    payload = make_client_payload(redirect_uri=redirect_uri, grant_types=grant_types, name=name)
 
     response = client.post("/api/clients", json=payload, headers=admin_headers())
 
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     return payload, response.json()
 

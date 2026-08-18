@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import select
 
-from app.models import OAuthClient, Scopes, GrantType, PasswordPolicy
-from app.schemas.clients import ClientCreate, ClientResponse
+from app.models import OAuthClient, Scopes, PasswordPolicy, GrantType
+from app.schemas import ClientCreate, ClientResponse
 from app.handlers.errors import ClientNotFound, ScopeNotFound, ClientError
 from app.services.security.crypt import generate_secret
 
