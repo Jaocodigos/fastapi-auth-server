@@ -6,7 +6,7 @@ from typing import Annotated
 from app.db.session import get_db
 from app.schemas.user_stores import UserStoreCreate, UserStoreResponse
 
-from app.services.security.auth import authenticate
+from app.services.security.auth import admin_authentication
 from app.services.resources.user_stores import get_user_store, create_user_store, erase_user_store
 
 router = APIRouter(prefix="/api", tags=["User Store"])
@@ -17,7 +17,7 @@ def get_user_stores(
     user_store_id: str,
     db: Session = Depends(get_db),
 
-    _: None = Depends(authenticate)
+    _: None = Depends(admin_authentication)
 ):
 
     return get_user_store(db, user_store_id, return_none=False)
@@ -27,7 +27,7 @@ def get_user_stores(
 def register_user_store(
     payload: Annotated[UserStoreCreate, Body()],
     db: Session = Depends(get_db),
-    _: None = Depends(authenticate)
+    _: None = Depends(admin_authentication)
 ):
 
     return create_user_store(db, payload)
@@ -36,7 +36,7 @@ def register_user_store(
 def delete_user_store(
     user_store_id: str,
     db: Session = Depends(get_db),
-    _: None = Depends(authenticate)
+    _: None = Depends(admin_authentication)
 ):
 
     return erase_user_store(db, user_store_id)

@@ -214,5 +214,5 @@ __marimo__/
 *.pem
 
 TODO.md
-BACKLOG.md
-SPEC.md
+docs/BACKLOG.md
+docs/SPEC.md

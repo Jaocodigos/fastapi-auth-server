@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 
 from app.db.session import get_db
-from app.schemas.clients import ClientCreate
+from app.schemas.clients import ClientCreate, ClientUpdate
 from app.schemas.default import DeletedResponse
 from app.services.security.auth import admin_authentication
-from app.services.resources.client import get_all_clients, create_client, erase_client
+from app.services.resources.client import get_all_clients, create_client, erase_client, modify_client
 
 router = APIRouter(prefix="/api", tags=["Clients"])
 
@@ -31,6 +31,16 @@ def register_client(
     new_client = create_client(db=db, data=data)
 
     return new_client
+
+@router.patch("/clients/{client_id}")
+def update_client(
+        client_id: str,
+        data: Annotated[ClientUpdate, Body()],
+        db: Session = Depends(get_db),
+        _: None = Depends(admin_authentication)
+):
+
+    return modify_client(db=db, client_id=client_id, data=data)
 
 @router.delete("/clients/{client_id}")
 def delete_client(

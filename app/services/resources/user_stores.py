@@ -5,7 +5,8 @@ from app.models import UserStore
 from app.schemas.user_stores import UserStoreCreate, UserStoreResponse
 from app.schemas.default import DeletedResponse
 from app.handlers.errors.user_stores import UserStoreAlreadyExists, UserStoreNotFound
-from app.services.resources.client import get_client
+
+from app.services.resources import client
 
 SPECIAL_CHARS = "!@#$%^&*(),.?\":{}|<>"
 
@@ -36,7 +37,7 @@ def create_user_store(db: Session, data: UserStoreCreate):
 
     for client_id in data.clients:
 
-        get_client(db, client_id=client_id)
+        client.get_client(db, client_id=client_id)
 
 
     exists = get_user_store(db, user_store_name=data.name)

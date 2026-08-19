@@ -2,10 +2,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import select
 
 from app.models import OAuthClient, Scopes, PasswordPolicy, GrantType
-from app.schemas import ClientCreate, ClientResponse
+from app.schemas import ClientCreate, ClientResponse, UpdatedResponse, ClientUpdate
 from app.handlers.errors import ClientNotFound, ScopeNotFound, ClientError
 from app.services.security.crypt import generate_secret
 
+from app.services.resources import user_stores
 
 def get_all_clients(db: Session):
 
@@ -89,6 +90,11 @@ def create_client(db: Session, data: ClientCreate):
         )
         db.add(policy)
 
+    if data.user_store:
+
+        user_store = user_stores.get_user_store(db, data.user_store)
+        client.user_store = user_store
+
 
     # Public clients can have a secret, even they don't use?
     secret = client.generate_secret()
@@ -105,8 +111,9 @@ def create_client(db: Session, data: ClientCreate):
         refresh_token_exp=client.refresh_token_exp,
         code_exp=client.code_exp,
         client_type=client.client_type,
-        response_type=client.response_type
-    )
+        response_type=client.response_type,
+        user_store=client.user_store
+    ).model_dump(exclude_none=True)
 
 def erase_client(db: Session, client_id: str):
 
@@ -142,3 +149,44 @@ def get_client(db: Session, client_name=None, client_id=None, return_none=False)
 
     return client
 
+
+def modify_client(db: Session, client_id: str, data: ClientUpdate):
+
+    payload = data.model_dump(exclude_none=True, exclude_unset=True)
+
+    client = get_client(db, client_id=client_id)
+
+    if data.user_store:
+
+        user_store = user_stores.get_user_store(db, user_store_name=data.user_store, return_none=False)
+        payload["user_store"] = user_store
+
+    if data.grant_types:
+        payload["grant_types"] = []
+
+        for x in data.grant_types:
+
+            grant = db.execute(select(GrantType).filter_by(name=x)).scalar_one_or_none()
+
+            if grant is None:
+                raise ClientError("Invalid grant type")
+
+            payload["grant_types"].append(grant)
+
+    if data.scopes:
+        payload["scopes"] = []
+
+        for x in data.scopes:
+
+            scope = db.execute(select(Scopes).filter_by(scope_name=x)).scalar_one_or_none()
+
+            if scope is None:
+                raise ScopeNotFound()
+
+            payload["scopes"].append(scope)
+
+    client.update_record(payload)
+
+    client.save(db)
+
+    return UpdatedResponse()
