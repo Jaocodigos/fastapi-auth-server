@@ -24,15 +24,13 @@ OAuth 2.0 Authorization Server (FastAPI) with `authorization_code` + PKCE (`S256
 ## Requirements
 
 - Python 3.13 (or 3.11+ with dependency adjustments)
-- `pip`
-- `requirements.txt`
+- `uv`
+- pyproject.toml
 
 Recommended installation:
 
 ```bash
-python -m venv .venv
-. .venv/Scripts/activate  # or .venv/bin/activate on Linux
-pip install -r requirements.txt
+    uv sync
 ```
 
 ## Environment Variables

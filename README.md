@@ -25,15 +25,13 @@ afinal o intuito deste projeto é de fato entender como funciona na íntegra um 
 ## Requisitos
 
 - Python 3.13 (ou 3.11+ com ajuste de dependências)
-- `pip`
-- `requirements.txt`
+- `uv`
+- pyproject.toml
 
 Instalação recomendada:
 
 ```bash
-python -m venv .venv
-. .venv/Scripts/activate(or .venv/bin/activate on linux)
-pip install -r requirements.txt
+  uv sync
 ```
 
 ## Envs
