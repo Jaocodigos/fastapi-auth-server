@@ -46,3 +46,7 @@ def token_endpoint(data: Annotated[TokenExchange, Body()],
     )
 
     return token
+
+# TODO Add revocation endpoint
+
+# TODO: Add introspection endpoint
